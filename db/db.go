@@ -28,7 +28,3 @@ func NewConnection() (conn *sql.DB, err error) {
 
 	return
 }
-
-func (s *Store) CloseConnection(conn *sql.DB) error {
-	return conn.Close()
-}
