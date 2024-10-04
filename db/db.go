@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
 
 	_ "github.com/lib/pq"
 
@@ -25,6 +26,38 @@ func NewConnection() (conn *sql.DB, err error) {
 	}
 
 	err = conn.Ping()
+
+	return
+}
+
+func ScanRow(row *sql.Row, targetType interface{}) (err error) {
+
+	val := reflect.ValueOf(targetType).Elem()
+	numFields := val.NumField()
+	scanArgs := make([]interface{}, numFields)
+	for i := 0; i < numFields; i++ {
+		field := val.Field(i)
+		scanArgs[i] = field.Addr().Interface()
+	}
+
+	err = row.Scan(scanArgs...)
+
+	return
+}
+
+func ScanRows(rows *sql.Rows, targetType interface{}) (err error) {
+
+	val := reflect.ValueOf(targetType).Elem()
+
+	numFields := val.NumField()
+
+	scanArgs := make([]interface{}, numFields)
+	for i := 0; i < numFields; i++ {
+		field := val.Field(i)
+		scanArgs[i] = field.Addr().Interface()
+	}
+
+	err = rows.Scan(scanArgs...)
 
 	return
 }
