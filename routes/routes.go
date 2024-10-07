@@ -24,7 +24,7 @@ const (
 	DELETE Method = "DELETE"
 )
 
-func (r *Route) NewRoute(method Method, route string, function func(http.ResponseWriter, *http.Request)) {
+func (r *Route) NewRoute(method Method, route string, function http.HandlerFunc) {
 
 	url := fmt.Sprintf("%s %s", method, route)
 
