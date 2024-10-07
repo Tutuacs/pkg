@@ -26,6 +26,21 @@ func GetParam(r *http.Request, name string) (param string) {
 	return
 }
 
+func GetTokenFromRequest(r *http.Request) string {
+	tokenAuth := r.Header.Get("Authorization")
+	tokenQuery := r.URL.Query().Get("token")
+
+	if tokenAuth != "" {
+		return tokenAuth
+	}
+
+	if tokenQuery != "" {
+		return tokenQuery
+	}
+
+	return ""
+}
+
 func WriteResponse(w http.ResponseWriter, status int, result interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)

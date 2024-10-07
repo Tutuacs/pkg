@@ -13,6 +13,12 @@ import (
 type Store struct {
 }
 
+// type StoreInterface interface {
+// 	NewConnection() (*sql.DB, error)
+// 	ScanRow(*sql.Row, interface{}) error
+// 	ScanRows(*sql.Rows, interface{}) error
+// }
+
 func NewConnection() (conn *sql.DB, err error) {
 	conf := config.GetDB()
 
