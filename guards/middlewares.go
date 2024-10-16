@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Tutuacs/internal/auth"
 	"github.com/dgrijalva/jwt-go"
 
+	"github.com/Tutuacs/pkg/enums"
+	JWT "github.com/Tutuacs/pkg/jwt"
 	"github.com/Tutuacs/pkg/logs"
 	"github.com/Tutuacs/pkg/resolver"
 )
@@ -18,12 +19,12 @@ type contextKey string
 
 const UserKey contextKey = "user"
 
-func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...int) http.HandlerFunc {
+func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		tokenString := resolver.GetTokenFromRequest(r)
 
-		token, err := auth.ValidateJWT(tokenString)
+		token, err := JWT.ValidateJWT(tokenString)
 		if err != nil {
 			logs.ErrorLog(fmt.Sprintf("failed to validate token: %v", err))
 			permissionDenied(w)
@@ -46,7 +47,16 @@ func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...int) http.HandlerF
 			return
 		}
 
-		store, err := auth.NewStore()
+		str = fmt.Sprintf("%v", claims["role"])
+
+		tokenRole, err := strconv.ParseInt(str, 10, 8)
+		if err != nil {
+			logs.ErrorLog(fmt.Sprintf("failed to convert role to int: %v", err))
+			permissionDenied(w)
+			return
+		}
+
+		store, err := NewStore()
 		if err != nil {
 			resolver.WriteResponse(w, http.StatusInternalServerError, map[string]string{"Error": err.Error()})
 			return
@@ -61,15 +71,20 @@ func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...int) http.HandlerF
 
 		// Verificar roles se roles != vazio
 		if len(roles) > 0 {
-			isAuthorized := false
+			notAuthorized := true
 			for _, role := range roles {
-				if u.Role == role { // Supondo que o usuário tenha o campo Role no seu struct
-					isAuthorized = true
+				if tokenRole == int64(role) { // Supondo que o usuário tenha o campo Role no seu struct
+					notAuthorized = false
 					break
 				}
 			}
-			if !isAuthorized {
+			if notAuthorized {
 				resolver.WriteResponse(w, http.StatusUnauthorized, map[string]string{"Error": "unauthorized"})
+				return
+			}
+
+			if tokenRole != int64(u.Role) {
+				resolver.WriteResponse(w, http.StatusUnauthorized, map[string]string{"Error": "role mismatch, make login again"})
 				return
 			}
 		}

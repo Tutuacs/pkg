@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-playground/validator"
 )
@@ -21,7 +22,6 @@ func GetBody(r *http.Request, response interface{}) (err error) {
 }
 
 func GetParam(r *http.Request, name string) (param string) {
-
 	param = r.PathValue(name)
 	return
 }
@@ -31,7 +31,7 @@ func GetTokenFromRequest(r *http.Request) string {
 	tokenQuery := r.URL.Query().Get("token")
 
 	if tokenAuth != "" {
-		return tokenAuth
+		return strings.Split(tokenAuth, " ")[1]
 	}
 
 	if tokenQuery != "" {
@@ -41,10 +41,15 @@ func GetTokenFromRequest(r *http.Request) string {
 	return ""
 }
 
-func WriteResponse(w http.ResponseWriter, status int, result interface{}) {
+func WriteResponse(w http.ResponseWriter, status int, response interface{}) error {
 	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(status)
 	encoder := json.NewEncoder(w)
-	encoder.Encode(result)
+	return encoder.Encode(response)
+}
+
+func GetLoggedUser(r *http.Request, key string) any {
+	return r.Context().Value(key)
 }
 
 var Validate = validator.New()
