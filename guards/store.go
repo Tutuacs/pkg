@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Tutuacs/pkg/db"
+	"github.com/Tutuacs/pkg/types"
 )
 
 type Store struct {
@@ -29,9 +30,9 @@ func (s *Store) CloseStore() {
 	}
 }
 
-func (s *Store) GetUserByEmail(email string) (usr *User, err error) {
+func (s *Store) GetUserByEmail(email string) (usr *types.User, err error) {
 	err = nil
-	usr = &User{}
+	usr = &types.User{}
 
 	query := "SELECT * FROM  users WHERE email = $1"
 	row := s.db.QueryRow(query, email)
@@ -46,7 +47,7 @@ func (s *Store) GetUserByEmail(email string) (usr *User, err error) {
 	return
 }
 
-func (s *Store) GetUserByID(ID int) (*User, error) {
+func (s *Store) GetUserByID(ID int) (*types.User, error) {
 
 	sql := "SELECT * FROM users WHERE id = $1"
 
@@ -55,7 +56,7 @@ func (s *Store) GetUserByID(ID int) (*User, error) {
 		return nil, err
 	}
 
-	usr := new(User)
+	usr := new(types.User)
 
 	for rows.Next() {
 		err = db.ScanRows(rows, usr)
