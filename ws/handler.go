@@ -89,8 +89,35 @@ func (h *WsHandler) handleMessage(ws *websocket.Conn, msg Message) {
 		}
 	}
 }
-
 func HandleHello(ws *websocket.Conn, data Message) {
 	fmt.Println("Handling /hello with data:", data)
-	ws.Write([]byte(fmt.Sprintf("Received data for t1: %v", data)))
+	ws.Write([]byte(fmt.Sprintf("Received data for /hello: %v", data)))
+
+	// Exemplo de envio de mensagem para todos os conectados
+	handler := NewWsHandler()
+	broadcastMsg := Message{Topic: "/hello", Data: "Broadcasting to all clients"}
+	handler.sendMessage(ws, broadcastMsg)
+}
+
+func (h *WsHandler) BroadcastMessage(msg Message) {
+	for conn := range h.conns {
+		err := h.sendMessage(conn, msg)
+		if err != nil {
+			fmt.Println("Error broadcasting message to:", conn.RemoteAddr(), err)
+		}
+	}
+}
+
+func (h *WsHandler) sendMessage(conn *websocket.Conn, msg Message) error {
+	messageBytes, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal message: %w", err)
+	}
+
+	_, err = conn.Write(messageBytes)
+	if err != nil {
+		return fmt.Errorf("failed to send message: %w", err)
+	}
+
+	return nil
 }
