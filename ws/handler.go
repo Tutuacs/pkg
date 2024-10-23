@@ -28,9 +28,11 @@ type topic_function struct {
 var topic_Func []topic_function
 
 func init() {
-	logs.MessageLog("Initializing topics on WebSocket...")
 	topic_Func = []topic_function{
 		{topic: "/hello", function: HandleHello},
+	}
+	if len(topic_Func) > 0 {
+		logs.MessageLog("Initializing WebSocket Server Topics List...")
 	}
 }
 
