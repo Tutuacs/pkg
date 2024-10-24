@@ -1,15 +1,6 @@
 package types
 
-// TODO: Create types and dtos for ws handler
-
-type Ws struct {
-	ID int64 `json:"id"`
+type Message struct {
+	Topic string      `json:"topic"`
+	Data  interface{} `json:"data"`
 }
-	
-type NewWsDto struct {
-}
-
-type UpdateWsDto struct {
-}
-	
-	

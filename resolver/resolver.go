@@ -48,6 +48,20 @@ func WriteResponse(w http.ResponseWriter, status int, response interface{}) erro
 	return encoder.Encode(response)
 }
 
+func MakeSSE(w http.ResponseWriter) {
+	w.Header().Add("Content-Type", "text/event-stream")
+	w.Header().Add("Cache-Control", "no-cache")
+	w.Header().Add("Connection", "keep-alive")
+
+	// Flush
+	flush, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
+		return
+	}
+	flush.Flush()
+}
+
 func GetLoggedUser(r *http.Request, key string) any {
 	return r.Context().Value(key)
 }
