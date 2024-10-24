@@ -11,13 +11,13 @@ import (
 	"github.com/Tutuacs/pkg/routes"
 )
 
-type Client struct {
+type client struct {
 	conns  map[*websocket.Conn]bool
-	UserId map[*websocket.Conn]int64
+	Client map[*websocket.Conn]int64
 }
 
 type WsHandler struct {
-	Client
+	client
 }
 
 type Message struct {
@@ -43,7 +43,7 @@ func init() {
 
 func NewWsHandler() *WsHandler {
 	return &WsHandler{
-		Client: Client{
+		client: client{
 			conns: make(map[*websocket.Conn]bool),
 		},
 	}
@@ -59,7 +59,7 @@ var i int64 = 0
 func (h *WsHandler) HandleWs(ws *websocket.Conn) {
 	fmt.Println("New connection from Client:", ws.RemoteAddr())
 	h.conns[ws] = true
-	h.UserId[ws] = i // Increment the user id
+	h.Client[ws] = i // Increment the user id
 	i++
 
 	ws.Write([]byte("Connected to /ws"))
