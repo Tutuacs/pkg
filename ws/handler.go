@@ -11,8 +11,13 @@ import (
 	"github.com/Tutuacs/pkg/routes"
 )
 
+type Client struct {
+	conns  map[*websocket.Conn]bool
+	UserId map[*websocket.Conn]int64
+}
+
 type WsHandler struct {
-	conns map[*websocket.Conn]bool
+	Client
 }
 
 type Message struct {
@@ -37,7 +42,11 @@ func init() {
 }
 
 func NewWsHandler() *WsHandler {
-	return &WsHandler{conns: make(map[*websocket.Conn]bool)}
+	return &WsHandler{
+		Client: Client{
+			conns: make(map[*websocket.Conn]bool),
+		},
+	}
 }
 
 func (h *WsHandler) BuildRoutes(router routes.Route) {
@@ -45,9 +54,13 @@ func (h *WsHandler) BuildRoutes(router routes.Route) {
 	router.NewWS("/ws", websocket.Handler(h.HandleWs))
 }
 
+var i int64 = 0
+
 func (h *WsHandler) HandleWs(ws *websocket.Conn) {
 	fmt.Println("New connection from Client:", ws.RemoteAddr())
 	h.conns[ws] = true
+	h.UserId[ws] = i // Increment the user id
+	i++
 
 	ws.Write([]byte("Connected to /ws"))
 	h.readLoop(ws)
