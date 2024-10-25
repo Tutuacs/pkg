@@ -107,18 +107,13 @@ func (h *WsHandler) handleMessage(ctx context.Context, conn *websocket.Conn, msg
 	}
 }
 
-func HandleHello(ctx context.Context, conn *websocket.Conn, data types.Message) {
-	fmt.Println("Handling /hello with data:", data)
-
-	helloMsg := types.Message{Topic: "/hello", Data: "simple hello to client"}
-	NewWsHandler().sendMessage(ctx, conn, helloMsg)
-}
-
-func HandleUnknown(ctx context.Context, conn *websocket.Conn, data types.Message) {
-	fmt.Println("Handling /unknown with data:", data)
-
-	broadcastMsg := types.Message{}
-	NewWsHandler().BroadcastMessage(ctx, broadcastMsg)
+func (h *WsHandler) GetConn(id int64) *websocket.Conn {
+	for w, i := range h.conns {
+		if i == id {
+			return w
+		}
+	}
+	return nil
 }
 
 func (h *WsHandler) BroadcastMessage(ctx context.Context, msg types.Message) {
@@ -143,4 +138,21 @@ func (h *WsHandler) sendMessage(ctx context.Context, conn *websocket.Conn, msg t
 	}
 
 	return nil
+}
+
+// Recomended to use private functions
+// ! Use public functions only if you need to use it on another package
+
+func HandleHello(ctx context.Context, conn *websocket.Conn, data types.Message) {
+	fmt.Println("Handling /hello with data:", data)
+
+	helloMsg := types.Message{Topic: "/hello", Data: "simple hello to client"}
+	NewWsHandler().sendMessage(ctx, conn, helloMsg)
+}
+
+func HandleUnknown(ctx context.Context, conn *websocket.Conn, data types.Message) {
+	fmt.Println("Handling /unknown with data:", data)
+
+	broadcastMsg := types.Message{}
+	NewWsHandler().BroadcastMessage(ctx, broadcastMsg)
 }
