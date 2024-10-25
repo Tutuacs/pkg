@@ -3,8 +3,6 @@ package routes
 import (
 	"fmt"
 	"net/http"
-
-	"golang.org/x/net/websocket"
 )
 
 type Route struct {
@@ -29,12 +27,12 @@ const (
 
 func (r *Route) NewRoute(method Method, route string, function http.HandlerFunc) {
 
+	if method == ANY {
+		r.Router.HandleFunc(route, function)
+		return
+	}
+
 	url := fmt.Sprintf("%s %s", method, route)
 
 	r.Router.HandleFunc(url, function)
-}
-
-func (r *Route) NewWS(topic string, function websocket.Handler) {
-
-	r.Router.Handle(topic, function)
 }

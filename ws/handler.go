@@ -38,12 +38,22 @@ func NewWsHandler() *WsHandler {
 
 func (h *WsHandler) BuildRoutes(router routes.Route) {
 	router.NewRoute(routes.ANY, "/ws", h.onConnectWs)
+	// ? Whant to use validation?
+	// router.NewRoute(routes.ANY, "/ws", guards.AutenticatedRoute(h.onConnectWs))
+	// TODO: On client use like this: ws = new WebSocket(`ws://localhost:9000/ws?token=${encodeURIComponent(token)}`);
+	// ! You can change the way you get the token on guards/middlewares.go
 }
 
 func (h *WsHandler) onConnectWs(w http.ResponseWriter, r *http.Request) {
 	opts := &websocket.AcceptOptions{
-		OriginPatterns: []string{"*"}, // Allow all origins, or specify particular origins like "127.0.0.1:5500"
+		InsecureSkipVerify: true,          // Skip verifying the origin in production
+		OriginPatterns:     []string{"*"}, // Allow all origins, or specify particular origins like "127.0.0.1:5500"
 	}
+
+	// ? Using Validation for the WebSocket connection?
+	// userLogged := r.Context().Value(guards.UserKey).(*types.User)
+	// TODO: get the users info to use on the conns map!
+
 	conn, err := websocket.Accept(w, r, opts)
 	if err != nil {
 		fmt.Println("Error upgrading to WebSocket:", err)
@@ -53,21 +63,11 @@ func (h *WsHandler) onConnectWs(w http.ResponseWriter, r *http.Request) {
 	h.conns[conn] = i
 	i++
 
-	conn.Write(r.Context(), websocket.MessageText, []byte("Connected to /ws"))
-
-	go h.readLoop(r.Context(), conn)
-
+	h.readLoop(r.Context(), conn)
 }
 
 func (h *WsHandler) readLoop(ctx context.Context, conn *websocket.Conn) {
-	defer func() {
-		fmt.Println("Cleaning up connection:", h.conns[conn])
-		delete(h.conns, conn)
-		conn.Close(websocket.StatusNormalClosure, "Connection closed by server")
-	}()
-
 	for {
-		// Attempt to read message from WebSocket connection
 		msgType, buff, err := conn.Read(ctx)
 		if err != nil {
 			if websocket.CloseStatus(err) == websocket.StatusNormalClosure ||
@@ -77,6 +77,7 @@ func (h *WsHandler) readLoop(ctx context.Context, conn *websocket.Conn) {
 				break
 			}
 			fmt.Println("Error reading:", err)
+			fmt.Println(msgType, buff, err)
 			break
 		}
 
@@ -85,7 +86,6 @@ func (h *WsHandler) readLoop(ctx context.Context, conn *websocket.Conn) {
 			continue
 		}
 
-		// Deserialize the message to identify the topic
 		var msg types.Message
 		err = json.Unmarshal(buff, &msg)
 		if err != nil {
@@ -95,6 +95,7 @@ func (h *WsHandler) readLoop(ctx context.Context, conn *websocket.Conn) {
 
 		h.handleMessage(ctx, conn, msg)
 	}
+	delete(h.conns, conn)
 }
 
 func (h *WsHandler) handleMessage(ctx context.Context, conn *websocket.Conn, msg types.Message) {

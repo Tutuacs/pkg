@@ -26,6 +26,11 @@ func GetParam(r *http.Request, name string) (param string) {
 	return
 }
 
+func GetQueryParam(r *http.Request, name string) (param string) {
+	param = r.URL.Query().Get(name)
+	return
+}
+
 func GetTokenFromRequest(r *http.Request) string {
 	tokenAuth := r.Header.Get("Authorization")
 	tokenQuery := r.URL.Query().Get("token")
