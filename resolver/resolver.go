@@ -54,17 +54,15 @@ func WriteResponse(w http.ResponseWriter, status int, response interface{}) erro
 }
 
 func MakeSseRoute(w http.ResponseWriter) {
-	w.Header().Add("Content-Type", "text/event-stream")
-	w.Header().Add("Cache-Control", "no-cache")
-	w.Header().Add("Connection", "keep-alive")
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	// Flush
-	flush, ok := w.(http.Flusher)
-	if !ok {
-		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
-		return
+	// Flush headers to ensure SSE connection is established
+	if flusher, ok := w.(http.Flusher); ok {
+		flusher.Flush()
 	}
-	flush.Flush()
 }
 
 func GetLoggedUser(r *http.Request, key string) any {

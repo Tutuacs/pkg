@@ -16,7 +16,10 @@ import (
 var i int64 = 0
 
 func init() {
+	// ! Dont remove this nil initialization
 	wsHandler = nil
+	// * Its to prevent loose the conns map
+
 	topic_Func = &[]topic_function{
 		{topic: "/hello", function: HandleHello},
 		{topic: "/unknown", function: HandleUnknown},
@@ -107,15 +110,6 @@ func (h *WsHandler) handleMessage(ctx context.Context, conn *websocket.Conn, msg
 	}
 }
 
-func (h *WsHandler) GetConn(id int64) *websocket.Conn {
-	for w, i := range h.conns {
-		if i == id {
-			return w
-		}
-	}
-	return nil
-}
-
 func (h *WsHandler) BroadcastMessage(ctx context.Context, msg types.Message) {
 	for conn := range h.conns {
 		msg := types.Message{Topic: "/hello unknown", Data: h.conns[conn]}
@@ -140,7 +134,16 @@ func (h *WsHandler) sendMessage(ctx context.Context, conn *websocket.Conn, msg t
 	return nil
 }
 
-// Recomended to use private functions
+func (h *WsHandler) GetConn(id int64) *websocket.Conn {
+	for w, i := range h.conns {
+		if i == id {
+			return w
+		}
+	}
+	return nil
+}
+
+// Recomended to use private functions on topics_functions
 // ! Use public functions only if you need to use it on another package
 
 func HandleHello(ctx context.Context, conn *websocket.Conn, data types.Message) {
