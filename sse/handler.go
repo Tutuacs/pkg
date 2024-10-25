@@ -8,7 +8,7 @@ import (
 )
 
 type SseHandler struct {
-	conn map[http.ResponseWriter]int64
+	conns map[http.ResponseWriter]int64
 }
 
 var sseHandler *SseHandler
@@ -20,7 +20,7 @@ func init() {
 func NewSseHandler() *SseHandler {
 	if sseHandler == nil {
 		sseHandler = &SseHandler{
-			conn: make(map[http.ResponseWriter]int64),
+			conns: make(map[http.ResponseWriter]int64),
 		}
 	}
 	return sseHandler
@@ -49,7 +49,7 @@ func (h *SseHandler) onConnectSse(w http.ResponseWriter, r *http.Request) {
 	// userLogged := r.Context().Value(guards.UserKey).(*types.User)
 	// TODO: get the users info to use on the conns map!
 
-	h.conn[w] = i
+	h.conns[w] = i
 	i++
 
 }
@@ -59,7 +59,7 @@ func (h *SseHandler) SendMessage(w http.ResponseWriter, message interface{}) {
 }
 
 func (h *SseHandler) GetConn(id int64) http.ResponseWriter {
-	for w, i := range h.conn {
+	for w, i := range h.conns {
 		if i == id {
 			return w
 		}
