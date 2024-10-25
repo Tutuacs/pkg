@@ -53,7 +53,7 @@ func WriteResponse(w http.ResponseWriter, status int, response interface{}) erro
 	return encoder.Encode(response)
 }
 
-func MakeSSE(w http.ResponseWriter) {
+func MakeSseRoute(w http.ResponseWriter) {
 	w.Header().Add("Content-Type", "text/event-stream")
 	w.Header().Add("Cache-Control", "no-cache")
 	w.Header().Add("Connection", "keep-alive")

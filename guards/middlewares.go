@@ -99,7 +99,7 @@ func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.H
 	}
 }
 
-func AuthenticatedWsRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.HandlerFunc {
+func AuthenticatedUrlRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		tokenString := resolver.GetQueryParam(r, "token")

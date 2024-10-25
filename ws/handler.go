@@ -39,7 +39,7 @@ func NewWsHandler() *WsHandler {
 func (h *WsHandler) BuildRoutes(router routes.Route) {
 	router.NewRoute(routes.ANY, "/ws", h.onConnectWs)
 	// ? Whant to use validation?
-	// router.NewRoute(routes.ANY, "/ws", guards.AutenticatedRoute(h.onConnectWs))
+	// router.NewRoute(routes.ANY, "/ws", guards.AuthenticatedUrlRoute(h.onConnectWs))
 	// TODO: On client use like this: ws = new WebSocket(`ws://localhost:9000/ws?token=${encodeURIComponent(token)}`);
 	// ! You can change the way you get the token on guards/middlewares.go
 }
