@@ -13,6 +13,7 @@ import (
 
 type RedisPubSub struct {
 	client      *redis.Client
+	sub         *redis.PubSub
 	subscribers map[string]func(ctx context.Context, msg types.Message)
 }
 
@@ -31,7 +32,6 @@ func NewRedisPubSub(addr string) (*RedisPubSub, error) {
 	}
 
 	logs.MessageLog("Initializing Redis PubSub...")
-	go pubsub.listen()
 
 	return pubsub, nil
 }
@@ -39,7 +39,7 @@ func NewRedisPubSub(addr string) (*RedisPubSub, error) {
 // Subscreve-se a um tópico com uma função de manipulação
 func (r *RedisPubSub) Subscribe(topic string, handler func(ctx context.Context, msg types.Message)) {
 	r.subscribers[topic] = handler
-	r.client.Subscribe(context.Background(), topic)
+	r.sub = r.client.Subscribe(context.Background(), topic)
 }
 
 // Publica uma mensagem em um tópico
@@ -53,8 +53,12 @@ func (r *RedisPubSub) Publish(ctx context.Context, topic string, msg types.Messa
 }
 
 // Função de listener para receber mensagens de tópicos assinados
-func (r *RedisPubSub) listen() {
-	pubsub := r.client.Subscribe(context.Background())
+func (r *RedisPubSub) Listen() {
+	pubsub := r.sub
+	if pubsub == nil {
+		fmt.Println("Nenhuma assinatura ativa.")
+		return
+	}
 	defer pubsub.Close()
 
 	for {

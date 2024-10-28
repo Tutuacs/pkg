@@ -56,3 +56,18 @@ func (r *RedisClient) Get(key string, timeout time.Duration) (string, error) {
 
 	return r.conn.Get(ctx, key).Result()
 }
+
+func (r *RedisClient) Del(key string, timeout time.Duration) error {
+	if timeout == 0 {
+		return r.conn.Del(ctx, key).Err()
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	return r.conn.Del(ctx, key).Err()
+}
+
+func (r *RedisClient) Close() error {
+	return r.conn.Close()
+}
