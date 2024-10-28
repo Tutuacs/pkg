@@ -13,6 +13,8 @@ type config struct {
 	apiConfig
 	dbConfig
 	jwtConfig
+	redisConfig
+	mqttConfig
 }
 
 type apiConfig struct {
@@ -31,6 +33,15 @@ type dbConfig struct {
 type jwtConfig struct {
 	JWT_EXP    int64
 	JWT_SECRET string
+}
+
+type redisConfig struct {
+	Addr string
+	// Password string
+}
+
+type mqttConfig struct {
+	Addr string
 }
 
 var cfg *config
@@ -58,6 +69,12 @@ func defaultConfig() *config {
 		jwtConfig: jwtConfig{
 			JWT_EXP:    getNumberEnv("JWT_EXP", 3600*24*7),
 			JWT_SECRET: getEnv("JWT_SECRET", "secret"),
+		},
+		redisConfig: redisConfig{
+			Addr: getEnv("REDIS_ADDR", "127.0.0.1:6379"),
+		},
+		mqttConfig: mqttConfig{
+			Addr: getEnv("MQTT_ADDR", "127.0.0.1:6379"),
 		},
 	}
 }
@@ -94,4 +111,12 @@ func GetDB() dbConfig {
 
 func GetJWT() jwtConfig {
 	return cfg.jwtConfig
+}
+
+func GetRedis() redisConfig {
+	return cfg.redisConfig
+}
+
+func GetMqtt() mqttConfig {
+	return cfg.mqttConfig
 }
