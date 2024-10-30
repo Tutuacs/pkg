@@ -89,7 +89,7 @@ func (h *WsHandler) readLoop(ctx context.Context, conn *websocket.Conn) {
 			continue
 		}
 
-		var msg types.Message
+		var msg types.WsMessage
 		err = json.Unmarshal(buff, &msg)
 		if err != nil {
 			fmt.Println("Error unmarshalling message:", err)
@@ -101,7 +101,7 @@ func (h *WsHandler) readLoop(ctx context.Context, conn *websocket.Conn) {
 	delete(h.conns, conn)
 }
 
-func (h *WsHandler) handleMessage(ctx context.Context, conn *websocket.Conn, msg types.Message) {
+func (h *WsHandler) handleMessage(ctx context.Context, conn *websocket.Conn, msg types.WsMessage) {
 	for _, tf := range *topic_Func {
 		if tf.topic == msg.Topic {
 			tf.function(ctx, conn, msg)
@@ -110,9 +110,9 @@ func (h *WsHandler) handleMessage(ctx context.Context, conn *websocket.Conn, msg
 	}
 }
 
-func (h *WsHandler) BroadcastMessage(ctx context.Context, msg types.Message) {
+func (h *WsHandler) BroadcastMessage(ctx context.Context, msg types.WsMessage) {
 	for conn := range h.conns {
-		msg := types.Message{Topic: "/hello unknown", Data: h.conns[conn]}
+		msg := types.WsMessage{Topic: "/hello unknown", Data: h.conns[conn]}
 		err := h.sendMessage(ctx, conn, msg)
 		if err != nil {
 			fmt.Println("Error broadcasting message to:", h.conns[conn], err)
@@ -120,7 +120,7 @@ func (h *WsHandler) BroadcastMessage(ctx context.Context, msg types.Message) {
 	}
 }
 
-func (h *WsHandler) sendMessage(ctx context.Context, conn *websocket.Conn, msg types.Message) error {
+func (h *WsHandler) sendMessage(ctx context.Context, conn *websocket.Conn, msg types.WsMessage) error {
 	messageBytes, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal message: %w", err)
@@ -146,16 +146,16 @@ func (h *WsHandler) GetConn(id int64) *websocket.Conn {
 // Recomended to use private functions on topics_functions
 // ! Use public functions only if you need to use it on another package
 
-func HandleHello(ctx context.Context, conn *websocket.Conn, data types.Message) {
+func HandleHello(ctx context.Context, conn *websocket.Conn, data types.WsMessage) {
 	fmt.Println("Handling /hello with data:", data)
 
-	helloMsg := types.Message{Topic: "/hello", Data: "simple hello to client"}
+	helloMsg := types.WsMessage{Topic: "/hello", Data: "simple hello to client"}
 	NewWsHandler().sendMessage(ctx, conn, helloMsg)
 }
 
-func HandleUnknown(ctx context.Context, conn *websocket.Conn, data types.Message) {
+func HandleUnknown(ctx context.Context, conn *websocket.Conn, data types.WsMessage) {
 	fmt.Println("Handling /unknown with data:", data)
 
-	broadcastMsg := types.Message{}
+	broadcastMsg := types.WsMessage{}
 	NewWsHandler().BroadcastMessage(ctx, broadcastMsg)
 }

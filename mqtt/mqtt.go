@@ -31,49 +31,39 @@ func UseMqtt() (*Mqtt, error) {
 
 		opts := mqtt.NewClientOptions()
 		opts.AddBroker(conf.Addr)
-		opts.SetClientID("gbase")
-		opts.SetUsername("gbase_user")
+		opts.SetClientID("go_mqtt_client")
+		opts.SetUsername("gbase_username")
 		opts.SetDefaultPublishHandler(messagePubHandler)
 		opts.OnConnect = connectHandler
 		opts.OnConnectionLost = connectLostHandler
 		opts.ConnectRetry = true
-
-		conn := mqtt.NewClient(opts)
-
-		if token := conn.Connect(); token.Wait() && token.Error() != nil {
-			logs.ErrorLog(fmt.Sprintf("Error connecting to mqtt broker: %v", token.Error()))
+		mqttClient := mqtt.NewClient(opts)
+		if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+			panic(token.Error())
 		}
 
 		client = &Mqtt{
 			Addr: conf.Addr,
-			conn: conn,
+			conn: mqttClient,
 		}
 	}
 
 	return client, nil
 }
 
-var HandleHello mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-	fmt.Printf("Received Hello message: %s from topic: %s\n", msg.Payload(), msg.Topic())
-}
-
-var HandleUnknown mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-	fmt.Printf("Received Unknown message: %s from topic: %s\n", msg.Payload(), msg.Topic())
-}
-
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-	fmt.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
+	logs.MessageLog(fmt.Sprintf("Received from topic: %s message: %s\n", msg.Topic(), msg.Payload()))
 }
 
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
-	fmt.Println("Connected")
+	logs.OkLog("MQTT client connected...")
 }
 
 var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
-	fmt.Printf("Connect lost: %v", err)
+	logs.WarnLog("MQTT client lost connection...")
 }
 
-func Publish(timeout time.Duration, msg types.MqttMessage) (err error) {
+func (mqtt *Mqtt) Publish(timeout time.Duration, msg types.MqttMessage) (err error) {
 
 	err = fmt.Errorf("mqtt client timeout")
 
@@ -84,7 +74,7 @@ func Publish(timeout time.Duration, msg types.MqttMessage) (err error) {
 		client.conn.Connect()
 	}
 
-	token := client.conn.Publish(msg.Topic(), 0, false, msg.Payload())
+	token := client.conn.Publish(msg.Topic, 0, false, msg.Payload)
 
 	token.Wait()
 	err = token.Error()
@@ -102,4 +92,16 @@ func (mqtt *Mqtt) Subscribe(topic string, handler mqtt.MessageHandler) (err erro
 	token.Wait()
 	err = token.Error()
 	return
+}
+
+// TODO: Create your handlers
+
+var HandleHello mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
+	fmt.Printf("Received from topic: %s message: %s\n", msg.Topic(), msg.Payload())
+	fmt.Println("Look at Hello")
+}
+
+var HandleUnknown mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
+	fmt.Printf("Received from topic: %s message: %s\n", msg.Topic(), msg.Payload())
+	fmt.Println("Look at unknown")
 }

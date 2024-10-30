@@ -15,7 +15,7 @@ import (
 
 type RedisPubSub struct {
 	client      *redis.Client
-	subscribers map[string]func(ctx context.Context, msg types.Message)
+	subscribers map[string]func(ctx context.Context, msg types.RedisMessage)
 }
 
 var pubsub *RedisPubSub
@@ -37,7 +37,7 @@ func UseRedisPubSub() (*RedisPubSub, error) {
 
 		pubsub = &RedisPubSub{
 			client:      client.conn,
-			subscribers: make(map[string]func(ctx context.Context, msg types.Message)),
+			subscribers: make(map[string]func(ctx context.Context, msg types.RedisMessage)),
 		}
 	}
 
@@ -47,7 +47,7 @@ func UseRedisPubSub() (*RedisPubSub, error) {
 }
 
 // Subscribe the client on a topic and respective function handler
-func (r *RedisPubSub) Subscribe(topic string, handler func(ctx context.Context, msg types.Message)) error {
+func (r *RedisPubSub) Subscribe(topic string, handler func(ctx context.Context, msg types.RedisMessage)) error {
 	r.subscribers[topic] = handler
 	sub := r.client.Subscribe(context.Background(), topic)
 	_, err := sub.Receive(context.Background())
@@ -58,7 +58,7 @@ func (r *RedisPubSub) Subscribe(topic string, handler func(ctx context.Context, 
 }
 
 // Publish a message to a topic
-func (r *RedisPubSub) Publish(ctx context.Context, msg types.Message) error {
+func (r *RedisPubSub) Publish(ctx context.Context, msg types.RedisMessage) error {
 	messageBytes, err := json.Marshal(msg.Data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal message: %w", err)
@@ -81,7 +81,7 @@ func (r *RedisPubSub) Listen() {
 				}
 
 				// Decodifica a mensagem e invoca o handler associado ao tópico
-				var message types.Message
+				var message types.RedisMessage
 				if err := json.Unmarshal([]byte(msg.Payload), &message); err != nil {
 					log.Printf("Error unmarshalling message from topic %s: %v", topic, err)
 					continue
@@ -97,12 +97,12 @@ func (r *RedisPubSub) Listen() {
 }
 
 // Exemplo de uso: criando funções para lidar com mensagens de diferentes tópicos
-func HandleHello(ctx context.Context, msg types.Message) {
+func HandleHello(ctx context.Context, msg types.RedisMessage) {
 	fmt.Println("Handling /hello with data:", msg)
 	// Processar a mensagem para o tópico "/hello"
 }
 
-func HandleUnknown(ctx context.Context, msg types.Message) {
+func HandleUnknown(ctx context.Context, msg types.RedisMessage) {
 	fmt.Println("Handling /unknown with data:", msg)
 	fmt.Println("Oia onde chegou")
 	// Processar a mensagem para o tópico "/unknown"

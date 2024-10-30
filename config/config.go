@@ -74,7 +74,7 @@ func defaultConfig() *config {
 			Addr: getEnv("REDIS_ADDR", "127.0.0.1:6379"),
 		},
 		mqttConfig: mqttConfig{
-			Addr: getEnv("MQTT_ADDR", "127.0.0.1:6379"),
+			Addr: getEnv("MQTT_ADDR", "127.0.0.1:1883"),
 		},
 	}
 }

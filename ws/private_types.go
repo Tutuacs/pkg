@@ -10,7 +10,7 @@ import (
 
 type topic_function struct {
 	topic    string
-	function func(ctx context.Context, ws *websocket.Conn, data types.Message)
+	function func(ctx context.Context, ws *websocket.Conn, data types.WsMessage)
 }
 
 var topic_Func *[]topic_function
