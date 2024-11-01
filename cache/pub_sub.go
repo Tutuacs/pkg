@@ -39,6 +39,9 @@ func UseRedisPubSub() (*RedisPubSub, error) {
 			client:      client.conn,
 			subscribers: make(map[string]func(ctx context.Context, msg types.RedisMessage)),
 		}
+		// ! By default, the service will listen to the following topics
+		// TODO: You can add your default topics too
+		pubsub.Subscribe("__keyevent@0__:expired", HandleExpire)
 	}
 
 	logs.MessageLog("Initializing Redis PubSub...")
@@ -99,6 +102,12 @@ func (r *RedisPubSub) Listen() {
 // Exemplo de uso: criando funções para lidar com mensagens de diferentes tópicos
 func HandleHello(ctx context.Context, msg types.RedisMessage) {
 	fmt.Println("Handling /hello with data:", msg)
+	// Processar a mensagem para o tópico "/hello"
+}
+
+// Exemplo de uso: criando funções para lidar com mensagens de diferentes tópicos
+func HandleExpire(ctx context.Context, msg types.RedisMessage) {
+	fmt.Println("Handling Expired Data with key:", msg)
 	// Processar a mensagem para o tópico "/hello"
 }
 
