@@ -15,6 +15,7 @@ type config struct {
 	jwtConfig
 	redisConfig
 	mqttConfig
+	smtpConfig
 }
 
 type apiConfig struct {
@@ -42,6 +43,13 @@ type redisConfig struct {
 
 type mqttConfig struct {
 	Addr string
+}
+
+type smtpConfig struct {
+	SMTP_MAIL string
+	SMTP_PASS string
+	SMTP_HOST string
+	SMTP_ADDR string
 }
 
 var cfg *config
@@ -75,6 +83,12 @@ func defaultConfig() *config {
 		},
 		mqttConfig: mqttConfig{
 			Addr: getEnv("MQTT_ADDR", "127.0.0.1:1883"),
+		},
+		smtpConfig: smtpConfig{
+			SMTP_MAIL: getEnv("SMTP_MAIL", "arthursilva.mailtest@gmail.com"),
+			SMTP_PASS: getEnv("SMTP_PASS", "xcyezdmrqithcyuo"),
+			SMTP_HOST: getEnv("SMTP_HOST", "smtp.gmail.com"),
+			SMTP_ADDR: getEnv("SMTP_ADDR", "smtp.gmail.com:587"),
 		},
 	}
 }
@@ -119,4 +133,8 @@ func GetRedis() redisConfig {
 
 func GetMqtt() mqttConfig {
 	return cfg.mqttConfig
+}
+
+func GetMailer() smtpConfig {
+	return cfg.smtpConfig
 }
