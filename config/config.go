@@ -16,6 +16,7 @@ type config struct {
 	redisConfig
 	mqttConfig
 	smtpConfig
+	uploadthingConfig
 }
 
 type apiConfig struct {
@@ -50,6 +51,11 @@ type smtpConfig struct {
 	SMTP_PASS string
 	SMTP_HOST string
 	SMTP_ADDR string
+}
+
+type uploadthingConfig struct {
+	Host   string
+	ApiKey string
 }
 
 var cfg *config
@@ -89,6 +95,10 @@ func defaultConfig() *config {
 			SMTP_PASS: getEnv("SMTP_PASS", "xcyezdmrqithcyuo"),
 			SMTP_HOST: getEnv("SMTP_HOST", "smtp.gmail.com"),
 			SMTP_ADDR: getEnv("SMTP_ADDR", "smtp.gmail.com:587"),
+		},
+		uploadthingConfig: uploadthingConfig{
+			Host:   getEnv("UPLOADTHING_HOST", "https://api.uploadthing.com"),
+			ApiKey: getEnv("UPLOADTHING_SECRET", "sk_live_***"),
 		},
 	}
 }
@@ -137,4 +147,8 @@ func GetMqtt() mqttConfig {
 
 func GetMailer() smtpConfig {
 	return cfg.smtpConfig
+}
+
+func GetUpload() uploadthingConfig {
+	return cfg.uploadthingConfig
 }
