@@ -29,6 +29,19 @@ func CreateJWT(email string, userID int64, role enums.Role) (string, error) {
 	return tokenString, err
 }
 
+func CreateForgotToken(email string) (token string, err error) {
+	expiration := time.Second * time.Duration(config.GetJWT().JWT_FORGOT_EXP)
+
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email":     email,
+		"expiresAt": time.Now().Add(expiration).Unix(),
+	})
+
+	token, err = t.SignedString([]byte(config.GetJWT().JWT_SECRET))
+
+	return
+}
+
 func ValidateJWT(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

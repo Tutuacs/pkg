@@ -9,25 +9,7 @@ import (
 )
 
 type Store struct {
-	db      *sql.DB
-	extends bool
-}
-
-func NewStore(conn ...*sql.DB) (*Store, error) {
-	if len(conn) == 0 {
-		con, err := db.NewConnection()
-		if err != nil {
-			return nil, err
-		}
-		return &Store{db: con, extends: false}, nil
-	}
-	return &Store{db: conn[0], extends: true}, nil
-}
-
-func (s *Store) CloseStore() {
-	if !s.extends {
-		s.db.Close()
-	}
+	db *sql.DB
 }
 
 func (s *Store) GetUserByEmail(email string) (usr *types.User, err error) {

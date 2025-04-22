@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator"
 )
 
-func GetBody(r *http.Request, response interface{}) (err error) {
+func GetBody(r *http.Request, response any) (err error) {
 
 	if r.Body == nil {
 		return fmt.Errorf("missing body")

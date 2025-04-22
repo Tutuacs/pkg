@@ -11,6 +11,7 @@ import (
 
 type config struct {
 	apiConfig
+	clientConfig
 	dbConfig
 	jwtConfig
 	redisConfig
@@ -20,7 +21,11 @@ type config struct {
 }
 
 type apiConfig struct {
-	Port string
+	Port int64
+}
+
+type clientConfig struct {
+	Addr string
 }
 
 type dbConfig struct {
@@ -33,8 +38,9 @@ type dbConfig struct {
 }
 
 type jwtConfig struct {
-	JWT_EXP    int64
-	JWT_SECRET string
+	JWT_EXP        int64
+	JWT_FORGOT_EXP int64
+	JWT_SECRET     string
 }
 
 type redisConfig struct {
@@ -70,7 +76,10 @@ func defaultConfig() *config {
 	godotenv.Load()
 	return &config{
 		apiConfig: apiConfig{
-			Port: getEnv("API_PORT", ":9000"),
+			Port: getNumberEnv("API_PORT", 9000),
+		},
+		clientConfig: clientConfig{
+			Addr: getEnv("FRONTEND_ADDR", "http://localhost:3000"),
 		},
 		dbConfig: dbConfig{
 			Host: getEnv("DB_HOST", "127.0.0.1"),
@@ -81,8 +90,9 @@ func defaultConfig() *config {
 			Name: getEnv("DB_NAME", "defaultDb"),
 		},
 		jwtConfig: jwtConfig{
-			JWT_EXP:    getNumberEnv("JWT_EXP", 3600*24*7),
-			JWT_SECRET: getEnv("JWT_SECRET", "secret"),
+			JWT_EXP:        getNumberEnv("JWT_EXP", 3600*24*7),
+			JWT_FORGOT_EXP: getNumberEnv("JWT_FORGOT_EXP", 3600),
+			JWT_SECRET:     getEnv("JWT_SECRET", "secret"),
 		},
 		redisConfig: redisConfig{
 			Addr: getEnv("REDIS_ADDR", "127.0.0.1:6379"),
@@ -92,7 +102,7 @@ func defaultConfig() *config {
 		},
 		smtpConfig: smtpConfig{
 			SMTP_MAIL: getEnv("SMTP_MAIL", "arthursilva.mailtest@gmail.com"),
-			SMTP_PASS: getEnv("SMTP_PASS", "xcyezdmrqithcyuo"),
+			SMTP_PASS: getEnv("SMTP_PASS", "xcye zdmr qith cyuo "),
 			SMTP_HOST: getEnv("SMTP_HOST", "smtp.gmail.com"),
 			SMTP_ADDR: getEnv("SMTP_ADDR", "smtp.gmail.com:587"),
 		},
@@ -106,7 +116,7 @@ func defaultConfig() *config {
 func getEnv(key string, defaultInfo string) string {
 
 	info, ok := os.LookupEnv(key)
-	if !ok && len(info) != 0 {
+	if ok && len(info) != 0 {
 		return info
 	}
 
@@ -127,6 +137,10 @@ func getNumberEnv(key string, defaultInfo int64) int64 {
 
 func GetAPI() apiConfig {
 	return cfg.apiConfig
+}
+
+func GetClient() clientConfig {
+	return cfg.clientConfig
 }
 
 func GetDB() dbConfig {

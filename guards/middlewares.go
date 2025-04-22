@@ -2,6 +2,7 @@ package guards
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,7 +20,15 @@ type contextKey string
 
 const UserKey contextKey = "user"
 
-func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.HandlerFunc {
+type Guards struct {
+	store *Store
+}
+
+func UseGuard(conn *sql.DB) *Guards {
+	return &Guards{store: &Store{db: conn}}
+}
+
+func (g *Guards) AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		tokenString := resolver.GetTokenFromRequest(r)
@@ -27,13 +36,13 @@ func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.H
 		token, err := JWT.ValidateJWT(tokenString)
 		if err != nil {
 			logs.ErrorLog(fmt.Sprintf("failed to validate token: %v", err))
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
 		if !token.Valid {
 			log.Println("invalid token")
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
@@ -43,7 +52,7 @@ func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.H
 		userID, err := strconv.Atoi(str)
 		if err != nil {
 			logs.ErrorLog(fmt.Sprintf("failed to convert userID to int: %v", err))
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
@@ -52,20 +61,16 @@ func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.H
 		tokenRole, err := strconv.ParseInt(str, 10, 8)
 		if err != nil {
 			logs.ErrorLog(fmt.Sprintf("failed to convert role to int: %v", err))
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
-		store, err := NewStore()
-		if err != nil {
-			resolver.WriteResponse(w, http.StatusInternalServerError, map[string]string{"Error": err.Error()})
-			return
-		}
+		store := g.store
 
 		u, err := store.GetUserByID(userID)
 		if err != nil {
 			logs.ErrorLog(fmt.Sprintf("failed to get user by id: %v", err))
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
@@ -99,7 +104,7 @@ func AutenticatedRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.H
 	}
 }
 
-func AuthenticatedUrlRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.HandlerFunc {
+func (g *Guards) AuthenticatedUrlRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		tokenString := resolver.GetQueryParam(r, "token")
@@ -107,13 +112,13 @@ func AuthenticatedUrlRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) ht
 		token, err := JWT.ValidateJWT(tokenString)
 		if err != nil {
 			logs.ErrorLog(fmt.Sprintf("failed to validate token: %v", err))
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
 		if !token.Valid {
 			log.Println("invalid token")
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
@@ -123,7 +128,7 @@ func AuthenticatedUrlRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) ht
 		userID, err := strconv.Atoi(str)
 		if err != nil {
 			logs.ErrorLog(fmt.Sprintf("failed to convert userID to int: %v", err))
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
@@ -132,20 +137,16 @@ func AuthenticatedUrlRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) ht
 		tokenRole, err := strconv.ParseInt(str, 10, 8)
 		if err != nil {
 			logs.ErrorLog(fmt.Sprintf("failed to convert role to int: %v", err))
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
-		store, err := NewStore()
-		if err != nil {
-			resolver.WriteResponse(w, http.StatusInternalServerError, map[string]string{"Error": err.Error()})
-			return
-		}
+		store := g.store
 
 		u, err := store.GetUserByID(userID)
 		if err != nil {
 			logs.ErrorLog(fmt.Sprintf("failed to get user by id: %v", err))
-			permissionDenied(w)
+			g.permissionDenied(w)
 			return
 		}
 
@@ -179,6 +180,6 @@ func AuthenticatedUrlRoute(handlerFunc http.HandlerFunc, roles ...enums.Role) ht
 	}
 }
 
-func permissionDenied(w http.ResponseWriter) {
+func (g *Guards) permissionDenied(w http.ResponseWriter) {
 	resolver.WriteResponse(w, http.StatusForbidden, fmt.Sprintf("permission denied"))
 }
